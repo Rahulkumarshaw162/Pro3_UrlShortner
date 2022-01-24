@@ -63,14 +63,14 @@ const createUrl = async function (req, res) {
       let urlExist = await urlModel.findOne({ longUrl: longUrl }).select({ longUrl: 1, shortUrl: 1, urlCode: 1, _id: 0 });
 
       if (urlExist) {
-        await SET_ASYNC(`${longUrl}`, JSON.stringify(urlExist))
+        await SET_ASYNC(`${longUrl}`, JSON.stringify(urlExist), "EX", 30)
         return res.status(200).send({ status: true, data: urlExist })
       } else {
         const urlCode = shortid.generate().toLowerCase().replace(/[0-9]/g, '').replace(/[&\/\\#,+()$~%.-_-'":*?<>{}]/g, '');   //3
 
         const shortUrl = baseUrl + '/' + urlCode
         let urlOf = new urlModel({ longUrl, shortUrl, urlCode })
-        await SET_ASYNC(`${longUrl}`, JSON.stringify(urlOf))
+        await SET_ASYNC(`${longUrl}`, JSON.stringify(urlOf), "EX", 30)
         let data = await urlModel.create(urlOf)
         return res.status(200).send({ status: true, data: data })
       }
@@ -100,7 +100,7 @@ const getUrl = async function (req, res) {
   } else {
     let profile = await urlModel.findOne({ urlCode: req.params.code });
     console.log(profile)
-    await SET_ASYNC(`${req.params.code}`, JSON.stringify(profile))
+    await SET_ASYNC(`${req.params.code}`, JSON.stringify(profile),"EX", 30)
     return res.status(302).redirect(profile.longUrl)
   }
 
